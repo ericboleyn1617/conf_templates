@@ -1,0 +1,37 @@
+## Create SIP Adjacency (conf>sbc>signaling) ##
+
+adjacency sip {{circuit_id}}
+        adjacency-limits
+          regs 0
+          regs-rate sustain 0 per-second
+        call-media-policy
+          media-bypass-policy forbid
+        interop
+          header-settings from rewrite
+          header-settings via passthrough-inbound
+          message-manipulation
+            edit-profiles inbound ""
+            edit-profiles outbound ""
+        force-signaling-peer all-requests
+        adjacency-type preset-peering
+        privacy trusted
+        realm PeeringMedia1
+        remote-address-range ipv4 {{network_id}} prefix-len {{ip_prefix}}
+        service-address PeeringAddress4-01
+        signaling-local-port 5060
+        signaling-peer {{peer_ip}}
+        dynamic-routing-domain-match {{peer_ip}}
+                signaling-peer-port 5060
+        statistics-setting detail
+        default-interop-profile Peer
+        deactivation-mode normal
+        activate
+
+## Allow IPv4 Address in Perimeta ACL ##
+
+permit-peer service-network 4 ipv4 {{peer_ip}}
+
+## Juniper Firewall SRX ACL Update ##
+
+set security address-book global address {{circuit_id}} {{peer_ip}}/{{ip_prefix}}
+set security address-book global address-set CUSTOMER_SIP_TRUNKS address {{circuit_id}}
